@@ -1,4 +1,6 @@
 ﻿@page "/counter"
+@using BlazorApp.Shared;
+@inject HttpClient Http
 
 <PageTitle>Counter</PageTitle>
 
@@ -6,13 +8,24 @@
 
 <p role="status">Current count: @currentCount</p>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<button class="btn btn-primary" @onclick="AddCoffeeEntry">Click me</button>
 
 @code {
     private int currentCount = 0;
 
-    private void IncrementCount()
+    private void AddCoffeeEntry()
     {
-        currentCount++;
+        CoffeeEntry newEntry = new CoffeeEntry
+        {
+            CoffeeBeans = "my new beans",
+            BrewTime = 25,
+            Description = "it tasted ok",
+            Rating = 7,
+            TasteNotes = "a little sweet, slightly bitter",
+            Time = DateTime.Now,
+            ImagePath = "fakepath/image.png"
+        };
+
+        Http.PostAsJsonAsync("/api/CoffeeEntry", newEntry);
     }
 }

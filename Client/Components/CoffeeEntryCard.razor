@@ -1,0 +1,70 @@
+﻿<MudContainer>
+    <MudCard>
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText>@CoffeeBeans</MudText>
+                <MudText Typo="Typo.h6">@Time.ToString("yyyy-MM-dd")</MudText>
+                <MudRating SelectedValue="@Rating"  MaxValue="10"/>
+            </CardHeaderContent>
+        </MudCardHeader>
+            @if (!string.IsNullOrWhiteSpace(_image))
+            {
+                <MudCardMedia Image="@_image"/>
+            }
+            else
+            {
+                <MudFileUpload T="IBrowserFile" Accept=".png,.jpg" FilesChanged="UploadFileAsync" MaximumFileCount="1">
+                    <ButtonTemplate>
+                        <MudFab HtmlTag="label"
+                            Color="Color.Secondary"
+                            Icon="@Icons.Material.Filled.Image"
+                            for="@context"/>
+                    </ButtonTemplate>
+                </MudFileUpload>
+            }
+        <MudText Typo="Typo.body2">Description: @Description</MudText>
+        <MudText Typo="Typo.body2">Notes: @TasteNotes</MudText>
+        <MudText Typo="Typo.body2">Brew time: @BrewTime seconds</MudText>
+    </MudCard>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string ImagePath { get; set; }
+    [Parameter]
+    public string CoffeeBeans { get; set; }
+    [Parameter]
+    public string TasteNotes { get; set; }
+    [Parameter]
+    public string Description { get; set; }
+    [Parameter]
+    public DateTimeOffset Time { get; set; }
+    [Parameter]
+    public int Rating { get; set; }
+    [Parameter]
+    public int BrewTime { get; set; }
+
+    private string _image;
+
+    private const int MAX_IMAGE_SIZE = 5242880;
+
+    private string[] acceptedImageTypes = new[] { "image.jpeg", "image/png" };
+
+    private async Task UploadFileAsync(IBrowserFile file)
+    {
+        if (acceptedImageTypes.Contains(file.ContentType))
+        {
+            // Can resize image if needed
+            //file = await file.RequestImageFileAsync(file.ContentType, 500, 500);
+
+            using MemoryStream ms = new MemoryStream();
+            var stream = file.OpenReadStream(MAX_IMAGE_SIZE);
+            await stream.CopyToAsync(ms);
+            var base64String = Convert.ToBase64String(ms.ToArray());
+            _image = $"data:{file.ContentType};base64,{base64String}";
+            
+            // Notify page to show image
+            StateHasChanged();
+        }
+    }
+}

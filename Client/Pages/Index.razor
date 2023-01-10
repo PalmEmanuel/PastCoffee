@@ -1,9 +1,56 @@
 ﻿@page "/"
+@using BlazorApp.Shared;
+@inject HttpClient Http;
 
 <PageTitle>Index</PageTitle>
 
-<h1>Hello, world!</h1>
+<button class="btn btn-primary" @onclick="AddCoffeeEntry">Click me</button>
 
-Welcome to your new app.
+<MudContainer>
+    @foreach (var entry in coffeeEntries)
+    {
+        <CoffeeEntryCard
+            BrewTime="@entry.BrewTime"
+            CoffeeBeans="@entry.CoffeeBeans"
+            Description="@entry.Description"
+            ImagePath="@entry.ImagePath"
+            Rating="@entry.Rating"
+            TasteNotes="@entry.TasteNotes"
+            Time="@entry.Time"
+        />
+    }
+</MudContainer>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+@code {
+    private List<CoffeeEntry> coffeeEntries = new List<CoffeeEntry>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            coffeeEntries = await Http.GetFromJsonAsync<List<CoffeeEntry>>("/api/CoffeeEntry") ?? new List<CoffeeEntry>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+        }
+    }
+
+    private void AddCoffeeEntry()
+    {
+        CoffeeEntry newEntry = new CoffeeEntry
+        {
+            CoffeeBeans = "my new beans",
+            BrewTime = 25,
+            Description = "it tasted ok",
+            Rating = 7,
+            TasteNotes = "a little sweet, slightly bitter",
+            Time = DateTimeOffset.Now,
+            ImagePath = "fakepath/image.png"
+        };
+
+        coffeeEntries.Add(newEntry);
+
+        Http.PostAsJsonAsync("/api/CoffeeEntry", newEntry);
+    }
+}
