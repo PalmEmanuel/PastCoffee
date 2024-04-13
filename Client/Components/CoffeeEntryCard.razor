@@ -46,9 +46,15 @@
 
     private string _image;
 
+    // 5mb
     private const int MAX_IMAGE_SIZE = 5242880;
 
     private string[] acceptedImageTypes = new[] { "image.jpeg", "image/png" };
+
+    public CoffeeEntryCard()
+    {
+        
+    }
 
     private async Task UploadFileAsync(IBrowserFile file)
     {

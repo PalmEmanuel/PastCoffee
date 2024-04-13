@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
 using Azure.Data.Tables;
 using Azure.Storage.Blobs;
 using BlazorApp.Shared;
@@ -10,6 +5,11 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace ApiIsolated
 {
@@ -19,9 +19,7 @@ namespace ApiIsolated
         private readonly TableClient _tableClient;
         private readonly BlobContainerClient _blobClient;
 
-        public CoffeeEntryFunction(ILoggerFactory loggerFactory,
-            TableClient tableClient,
-            BlobContainerClient blobClient)
+        public CoffeeEntryFunction(ILoggerFactory loggerFactory, TableClient tableClient, BlobContainerClient blobClient)
         {
             _logger = loggerFactory.CreateLogger<CoffeeEntryFunction>();
             _blobClient = blobClient;
@@ -61,18 +59,31 @@ namespace ApiIsolated
             {
                 return new CoffeeEntry
                 {
-                   BrewTime = (int)e["BrewTime"],
-                   CoffeeBeans = (string)e["CoffeeBeans"],
-                   Description = (string)e["Description"],
-                   ImagePath = (string)e["ImagePath"],
-                   Rating = (int)e["Rating"],
-                   TasteNotes = (string)e["TasteNotes"],
-                   Time = (DateTimeOffset)e["Time"]
+                    BrewTime = (int)e["BrewTime"],
+                    CoffeeBeans = (string)e["CoffeeBeans"],
+                    Description = (string)e["Description"],
+                    ImagePath = (string)e["ImagePath"],
+                    Rating = (int)e["Rating"],
+                    TasteNotes = (string)e["TasteNotes"],
+                    Time = (DateTimeOffset)e["Time"]
                 };
             }).ToList();
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             await response.WriteAsJsonAsync(entities);
+
+            return response;
+        }
+
+        [Function("GetCoffeeEntryImage")]
+        public async Task<HttpResponseData> GetCoffeeEntryImage([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "CoffeeEntry/image/{id:length(36)}")] HttpRequestData req, string id)
+        {
+            BlobClient blobClient = _blobClient.GetBlobClient(id);
+            var content = await blobClient.DownloadContentAsync();
+            var data = content.Value.Content.ToArray();
+
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            await response.WriteBytesAsync(data);
 
             return response;
         }
